@@ -1,5 +1,10 @@
 # Update-Verlauf
 
+## 1.2 – 6. November 2026
+- App auf Deutsch, Englisch, Französisch, Spanisch, Portugiesisch (Portugal) und Polnisch
+- Die App folgt der Sprache des Handys; in den Android-Einstellungen lässt sich die Sprache je App wählen
+- Der Update-Verlauf erscheint auf Deutsch und Englisch
+
 ## 1.1 – 6. November 2026
 - Nach dem iPhone-Original erweitert: Instrumente E-Gitarre, Akustik, Klassik, Rock, Gedämpft, E-Bass (4 Saiten) und Ukulele
 - Effekte als Pedale mit Schalter: Verzerrung, Wah, Chorus, Echo und Hall

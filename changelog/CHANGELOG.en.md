@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2 – November 6, 2026
+- App in German, English, French, Spanish, Portuguese (Portugal) and Polish
+- The app follows the phone's language; Android settings let you pick a language per app
+- The changelog is shown in German and English
+
 ## 1.1 – November 6, 2026
 - Extended after the iPhone original: electric, acoustic, classical, rock, muted, electric bass (4 strings) and ukulele
 - Effects as pedals with on/off switch: distortion, wah, chorus, delay and reverb
