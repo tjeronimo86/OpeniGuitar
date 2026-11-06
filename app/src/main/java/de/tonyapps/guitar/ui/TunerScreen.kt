@@ -323,7 +323,7 @@ private fun Headstock(model: TunerModel, modifier: Modifier) {
                     .clickable {
                         model.select(s)
                         Settings.chromatic = false
-                        GuitarEngine.pluck(s, Settings.stringFreq(s, 0), .8f)
+                        GuitarEngine.pluck(s, Settings.guitarFreq(s), .8f)
                         if (Settings.haptics) tick(view)
                     },
                 contentAlignment = Alignment.Center,

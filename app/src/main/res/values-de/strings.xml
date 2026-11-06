@@ -12,8 +12,8 @@
 
     <string name="sound">Klang</string>
     <string name="tone_acoustic">Akustik</string>
-    <string name="tone_nylon">Nylon</string>
-    <string name="tone_clean">Clean</string>
+    <string name="tone_nylon">Klassik</string>
+    <string name="tone_clean">E-Gitarre</string>
     <string name="tone_rock">Rock</string>
     <string name="fx_drive">Verzerrung</string>
     <string name="fx_chorus">Chorus</string>
@@ -52,7 +52,6 @@
     <string name="opt_notes">Notennamen anzeigen</string>
     <string name="opt_tap">Antippen spielt den Ton</string>
     <string name="opt_tap_hint">Aus: Bünde greifen und auf dem Korpus anschlagen wie beim Original</string>
-    <string name="opt_mute">Finger loslassen dämpft die Saite</string>
     <string name="opt_haptics">Vibration</string>
     <string name="a4">Kammerton A4</string>
     <string name="about">OpeniGuitar ist ein privates Hobbyprojekt, nicht kommerziell. Der Klang wird in Echtzeit berechnet; das Stimmgerät wertet das Mikrofon nur auf dem Gerät aus.</string>
@@ -68,4 +67,46 @@
     <string name="u_err_404">Keine Version gefunden.</string>
     <string name="u_err_403">GitHub lässt gerade keine Abfrage zu. Versuche es später.</string>
     <string name="u_err_net">Keine Verbindung zu GitHub.</string>
+
+    <string name="t_custom">Eigene</string>
+    <string name="string_n">Saite %1$d</string>
+    <string name="instrument">Instrument</string>
+    <string name="presets">Presets</string>
+    <string name="k_gain">Gain</string>
+    <string name="k_pedal">Pedal</string>
+    <string name="k_depth">Tiefe</string>
+    <string name="k_time">Zeit</string>
+    <string name="k_feedback">Feedback</string>
+    <string name="k_level">Pegel</string>
+    <string name="k_mix">Anteil</string>
+    <string name="fx_wah">Wah</string>
+    <string name="wah_tilt">Wird durch Neigen des Handys gesteuert</string>
+    <string name="tone_muted">Gedämpft</string>
+    <string name="tone_bass">E-Bass</string>
+    <string name="tone_ukulele">Ukulele</string>
+    <string name="p_acoustic">Akustik</string>
+    <string name="p_lead">Lead-Gitarre</string>
+    <string name="p_clean">Clean Chorus</string>
+    <string name="p_rock">Rock-Rhythmus</string>
+    <string name="p_wah">Wah-Solo</string>
+    <string name="p_classical">Klassik</string>
+    <string name="p_muted">Abgedämpft</string>
+    <string name="p_bass">E-Bass</string>
+    <string name="p_ukulele">Ukulele</string>
+    <string name="opt_margin">Saitenabstand</string>
+    <string name="opt_portrait">Hochformat</string>
+    <string name="opt_portrait_hint">Hals senkrecht wie in der späteren iPhone-Version</string>
+    <string name="sec_play">Spielweise</string>
+    <string name="opt_bending">Saitenziehen</string>
+    <string name="opt_open_hammer">Open Hammer-On</string>
+    <string name="opt_open_hammer_hint">Bund auf klingender leerer Saite greifen schlägt nicht neu an</string>
+    <string name="opt_pull_off">Pull-Off zur leeren Saite</string>
+    <string name="opt_pull_off_hint">Letzten Finger loslassen lässt die leere Saite weiterklingen statt sie zu dämpfen</string>
+    <string name="sec_tilt">Neigungseffekt</string>
+    <string name="tilt_off">Aus</string>
+    <string name="tilt_up">Höher</string>
+    <string name="tilt_down">Tiefer</string>
+    <string name="tilt_wah">Wah</string>
+    <string name="tilt_sens">Empfindlichkeit</string>
+    <string name="restore">Standardeinstellungen wiederherstellen</string>
 </resources>

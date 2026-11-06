@@ -7,122 +7,204 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import de.tonyapps.guitar.audio.GuitarEngine
 import de.tonyapps.guitar.audio.Tone
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 /** Alle Einstellungen, als Compose-State und dauerhaft gespeichert. */
 object Settings {
     private lateinit var p: SharedPreferences
+    private val all = ArrayList<Loadable>()
 
-    private val _tone = mutableStateOf(Tone.ACOUSTIC)
-    private val _drive = mutableFloatStateOf(0f)
-    private val _chorus = mutableFloatStateOf(0f)
-    private val _delay = mutableFloatStateOf(0f)
-    private val _reverb = mutableFloatStateOf(.25f)
-    private val _volume = mutableFloatStateOf(.8f)
-    private val _tuning = mutableStateOf("standard")
-    private val _a4 = mutableIntStateOf(440)
-    private val _frets = mutableIntStateOf(5)
-    private val _lefty = mutableStateOf(false)
-    private val _showNotes = mutableStateOf(true)
-    private val _tapPlays = mutableStateOf(true)
-    private val _releaseMutes = mutableStateOf(true)
-    private val _haptics = mutableStateOf(true)
-    private val _position = mutableIntStateOf(0)
-    private val _autoMode = mutableStateOf(true)
-    private val _chromatic = mutableStateOf(false)
-    private val _screen = mutableStateOf("guitar")
+    private interface Loadable { fun load() }
+
+    private class BoolPref(val key: String, val def: Boolean) : ReadWriteProperty<Any?, Boolean>, Loadable {
+        val st = mutableStateOf(def)
+        init { all.add(this) }
+        override fun load() { st.value = p.getBoolean(key, def) }
+        override fun getValue(thisRef: Any?, property: KProperty<*>) = st.value
+        override fun setValue(thisRef: Any?, property: KProperty<*>, value: Boolean) {
+            st.value = value; p.edit().putBoolean(key, value).apply(); pushToEngine()
+        }
+    }
+
+    private class FloatPref(val key: String, val def: Float) : ReadWriteProperty<Any?, Float>, Loadable {
+        val st = mutableFloatStateOf(def)
+        init { all.add(this) }
+        override fun load() { st.floatValue = p.getFloat(key, def) }
+        override fun getValue(thisRef: Any?, property: KProperty<*>) = st.floatValue
+        override fun setValue(thisRef: Any?, property: KProperty<*>, value: Float) {
+            st.floatValue = value; p.edit().putFloat(key, value).apply(); pushToEngine()
+        }
+    }
+
+    private class IntPref(val key: String, val def: Int) : ReadWriteProperty<Any?, Int>, Loadable {
+        val st = mutableIntStateOf(def)
+        init { all.add(this) }
+        override fun load() { st.intValue = p.getInt(key, def) }
+        override fun getValue(thisRef: Any?, property: KProperty<*>) = st.intValue
+        override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
+            st.intValue = value; p.edit().putInt(key, value).apply(); pushToEngine()
+        }
+    }
+
+    private class StringPref(val key: String, val def: String) : ReadWriteProperty<Any?, String>, Loadable {
+        val st = mutableStateOf(def)
+        init { all.add(this) }
+        override fun load() { st.value = p.getString(key, def) ?: def }
+        override fun getValue(thisRef: Any?, property: KProperty<*>) = st.value
+        override fun setValue(thisRef: Any?, property: KProperty<*>, value: String) {
+            st.value = value; p.edit().putString(key, value).apply(); pushToEngine()
+        }
+    }
+
+    // Klang
+    private var toneName by StringPref("toneName", Tone.ACOUSTIC.name)
+    var drive by FloatPref("drive", .6f)
+    var driveOn by BoolPref("driveOn", false)
+    var chorus by FloatPref("chorus", .5f)
+    var chorusOn by BoolPref("chorusOn", false)
+    var delay by FloatPref("delayLevel", .5f)
+    var delayOn by BoolPref("delayOn", false)
+    var delayMs by IntPref("delayMs", 380)
+    var delayFeedback by FloatPref("delayFeedback", .35f)
+    var reverb by FloatPref("reverb", .25f)
+    var reverbOn by BoolPref("reverbOn", true)
+    var wahOn by BoolPref("wahOn", false)
+    var wahPos by FloatPref("wahPos", .5f)
+    var volume by FloatPref("volume", .8f)
+
+    /** Neigungseffekt: off, up, down, wah. */
+    var tilt by StringPref("tilt", "off")
+    var tiltSens by FloatPref("tiltSens", .5f)
+
+    // Griffbrett
+    var tuningId by StringPref("tuning", "standard")
+    var customTuning by StringPref("customTuning", "40,45,50,55,59,64")
+    var a4 by IntPref("a4", 440)
+    var frets by IntPref("frets", 5)
+    var margin by FloatPref("margin", .065f)
+    var lefty by BoolPref("lefty", false)
+    var portrait by BoolPref("portrait", false)
+    var showNotes by BoolPref("showNotes", true)
+    var tapPlays by BoolPref("tapPlays", true)
+    var bending by BoolPref("bending", true)
+    var openHammer by BoolPref("openHammer", false)
+    var pullOffOpen by BoolPref("pullOffOpen", false)
+    var haptics by BoolPref("haptics", true)
+    var position by IntPref("position", 0)
+
+    // Stimmgeraet und App
+    var autoMode by BoolPref("autoMode", true)
+    var chromatic by BoolPref("chromatic", false)
+    var screen by StringPref("screen", "guitar")
+
+    /** Aktueller Wert des Neigungssensors 0 … 1 (nicht gespeichert). */
+    @Volatile private var tiltValue = 0f
 
     fun init(context: Context) {
         p = context.getSharedPreferences("guitar", Context.MODE_PRIVATE)
-        _tone.value = Tone.entries.getOrElse(p.getInt("tone", 0)) { Tone.ACOUSTIC }
-        _drive.floatValue = p.getFloat("drive", 0f)
-        _chorus.floatValue = p.getFloat("chorus", 0f)
-        _delay.floatValue = p.getFloat("delay", 0f)
-        _reverb.floatValue = p.getFloat("reverb", .25f)
-        _volume.floatValue = p.getFloat("volume", .8f)
-        _tuning.value = p.getString("tuning", "standard") ?: "standard"
-        _a4.intValue = p.getInt("a4", 440)
-        _frets.intValue = p.getInt("frets", 5)
-        _lefty.value = p.getBoolean("lefty", false)
-        _showNotes.value = p.getBoolean("showNotes", true)
-        _tapPlays.value = p.getBoolean("tapPlays", true)
-        _releaseMutes.value = p.getBoolean("releaseMutes", true)
-        _haptics.value = p.getBoolean("haptics", true)
-        _position.intValue = p.getInt("position", 0)
-        _autoMode.value = p.getBoolean("autoMode", true)
-        _chromatic.value = p.getBoolean("chromatic", false)
-        _screen.value = p.getString("screen", "guitar") ?: "guitar"
+        for (x in all) x.load()
         pushToEngine()
     }
 
+    var tone: Tone
+        get() = Tone.entries.firstOrNull { it.name == toneName } ?: Tone.ACOUSTIC
+        set(v) { toneName = v.name }
+
     private fun pushToEngine() {
+        if (!::p.isInitialized) return
         GuitarEngine.tone = tone
-        GuitarEngine.drive = drive
-        GuitarEngine.chorus = chorus
-        GuitarEngine.delay = delay
-        GuitarEngine.reverb = reverb
+        GuitarEngine.drive = if (driveOn) drive else 0f
+        GuitarEngine.chorus = if (chorusOn) chorus else 0f
+        GuitarEngine.delay = if (delayOn) delay else 0f
+        GuitarEngine.delaySeconds = delayMs / 1000f
+        GuitarEngine.delayFeedback = delayFeedback
+        GuitarEngine.reverb = if (reverbOn) reverb else 0f
         GuitarEngine.volume = volume
+        applyTilt(tiltValue)
     }
 
-    var tone: Tone
-        get() = _tone.value
-        set(v) { _tone.value = v; p.edit().putInt("tone", v.ordinal).apply(); GuitarEngine.tone = v }
-    var drive: Float
-        get() = _drive.floatValue
-        set(v) { _drive.floatValue = v; p.edit().putFloat("drive", v).apply(); GuitarEngine.drive = v }
-    var chorus: Float
-        get() = _chorus.floatValue
-        set(v) { _chorus.floatValue = v; p.edit().putFloat("chorus", v).apply(); GuitarEngine.chorus = v }
-    var delay: Float
-        get() = _delay.floatValue
-        set(v) { _delay.floatValue = v; p.edit().putFloat("delay", v).apply(); GuitarEngine.delay = v }
-    var reverb: Float
-        get() = _reverb.floatValue
-        set(v) { _reverb.floatValue = v; p.edit().putFloat("reverb", v).apply(); GuitarEngine.reverb = v }
-    var volume: Float
-        get() = _volume.floatValue
-        set(v) { _volume.floatValue = v; p.edit().putFloat("volume", v).apply(); GuitarEngine.volume = v }
-    var tuningId: String
-        get() = _tuning.value
-        set(v) { _tuning.value = v; p.edit().putString("tuning", v).apply() }
-    var a4: Int
-        get() = _a4.intValue
-        set(v) { _a4.intValue = v; p.edit().putInt("a4", v).apply() }
-    var frets: Int
-        get() = _frets.intValue
-        set(v) { _frets.intValue = v; p.edit().putInt("frets", v).apply() }
-    var lefty: Boolean
-        get() = _lefty.value
-        set(v) { _lefty.value = v; p.edit().putBoolean("lefty", v).apply() }
-    var showNotes: Boolean
-        get() = _showNotes.value
-        set(v) { _showNotes.value = v; p.edit().putBoolean("showNotes", v).apply() }
-    var tapPlays: Boolean
-        get() = _tapPlays.value
-        set(v) { _tapPlays.value = v; p.edit().putBoolean("tapPlays", v).apply() }
-    var releaseMutes: Boolean
-        get() = _releaseMutes.value
-        set(v) { _releaseMutes.value = v; p.edit().putBoolean("releaseMutes", v).apply() }
-    var haptics: Boolean
-        get() = _haptics.value
-        set(v) { _haptics.value = v; p.edit().putBoolean("haptics", v).apply() }
-    var position: Int
-        get() = _position.intValue
-        set(v) { _position.intValue = v; p.edit().putInt("position", v).apply() }
-    var autoMode: Boolean
-        get() = _autoMode.value
-        set(v) { _autoMode.value = v; p.edit().putBoolean("autoMode", v).apply() }
-    var chromatic: Boolean
-        get() = _chromatic.value
-        set(v) { _chromatic.value = v; p.edit().putBoolean("chromatic", v).apply() }
-    var screen: String
-        get() = _screen.value
-        set(v) { _screen.value = v; p.edit().putString("screen", v).apply() }
+    /** Vom Griffbrett mit dem Sensorwert aufgerufen. */
+    fun applyTilt(v: Float) {
+        tiltValue = v
+        GuitarEngine.whammyCents = when (tilt) {
+            "up" -> v * 200f
+            "down" -> -v * 1200f
+            else -> 0f
+        }
+        GuitarEngine.wah = when {
+            !wahOn && tilt != "wah" -> -1f
+            tilt == "wah" -> v
+            else -> wahPos
+        }
+    }
 
-    val tuning: Tuning get() = tuningById(tuningId)
+    val tuning: Tuning
+        get() = if (tuningId == "custom") Tuning("custom", de.tonyapps.guitar.R.string.t_custom, customNotes()) else tuningById(tuningId)
 
-    /** Tonhoehe einer Saite in Hertz, mit Bund und Ziehen in Cent. */
+    fun customNotes(): IntArray {
+        val parts = customTuning.split(",").mapNotNull { it.trim().toIntOrNull() }
+        return if (parts.size == 6) parts.toIntArray() else intArrayOf(40, 45, 50, 55, 59, 64)
+    }
+
+    /** Saiten auf dem Griffbrett: eigene Saiten des Instruments oder die Gitarrenstimmung. */
+    val boardNotes: IntArray get() = tone.notes ?: tuning.notes
+
+    /** Tonhoehe einer Saite auf dem Griffbrett in Hertz, mit Bund und Ziehen in Cent. */
     fun stringFreq(string: Int, fret: Int, bendCents: Float = 0f): Float =
-        midiToFreq(tuning.notes[string] + fret + bendCents / 100f, a4.toFloat())
+        midiToFreq(boardNotes[string] + fret + bendCents / 100f, a4.toFloat())
+
+    /** Tonhoehe einer leeren Gitarrensaite (Stimmgeraet). */
+    fun guitarFreq(string: Int): Float = midiToFreq(tuning.notes[string].toFloat(), a4.toFloat())
+
+    fun applyPreset(preset: Preset) {
+        tone = preset.tone
+        driveOn = preset.drive > 0f
+        if (preset.drive > 0f) drive = preset.drive
+        chorusOn = preset.chorus > 0f
+        if (preset.chorus > 0f) chorus = preset.chorus
+        delayOn = preset.delay > 0f
+        if (preset.delay > 0f) delay = preset.delay
+        reverbOn = preset.reverb > 0f
+        if (preset.reverb > 0f) reverb = preset.reverb
+        wahOn = preset.wah
+        tilt = preset.tilt
+    }
+
+    fun restoreDefaults() {
+        p.edit()
+            .remove("toneName").remove("drive").remove("driveOn").remove("chorus").remove("chorusOn")
+            .remove("delayLevel").remove("delayOn").remove("delayMs").remove("delayFeedback")
+            .remove("reverb").remove("reverbOn").remove("wahOn").remove("wahPos").remove("volume")
+            .remove("tilt").remove("tiltSens").remove("margin").remove("frets").remove("tapPlays")
+            .remove("bending").remove("openHammer").remove("pullOffOpen")
+            .apply()
+        for (x in all) x.load()
+        pushToEngine()
+    }
 
     const val MAX_FRET = 22
 }
+
+data class Preset(
+    val nameRes: Int,
+    val tone: Tone,
+    val drive: Float = 0f,
+    val chorus: Float = 0f,
+    val delay: Float = 0f,
+    val reverb: Float = .25f,
+    val wah: Boolean = false,
+    val tilt: String = "off",
+)
+
+val PRESETS = listOf(
+    Preset(de.tonyapps.guitar.R.string.p_acoustic, Tone.ACOUSTIC, reverb = .25f),
+    Preset(de.tonyapps.guitar.R.string.p_lead, Tone.CLEAN, drive = .75f, delay = .35f, reverb = .3f, wah = true, tilt = "up"),
+    Preset(de.tonyapps.guitar.R.string.p_clean, Tone.CLEAN, chorus = .6f, reverb = .35f),
+    Preset(de.tonyapps.guitar.R.string.p_rock, Tone.ROCK, drive = .3f, reverb = .15f),
+    Preset(de.tonyapps.guitar.R.string.p_wah, Tone.CLEAN, drive = .5f, reverb = .2f, wah = true, tilt = "wah"),
+    Preset(de.tonyapps.guitar.R.string.p_classical, Tone.NYLON, reverb = .35f),
+    Preset(de.tonyapps.guitar.R.string.p_muted, Tone.MUTED, reverb = .1f),
+    Preset(de.tonyapps.guitar.R.string.p_bass, Tone.BASS, reverb = 0f),
+    Preset(de.tonyapps.guitar.R.string.p_ukulele, Tone.UKULELE, reverb = .2f),
+)

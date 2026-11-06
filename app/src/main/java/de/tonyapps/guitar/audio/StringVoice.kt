@@ -39,13 +39,16 @@ internal class StringVoice(private val sr: Float) {
     private var active = false
     private var quiet = 0
 
+    /** Neigungseffekt (Whammy): Faktor auf alle Tonhoehen. */
+    var bendRatio = 1f
+
     /** Huellkurve fuer die Saitenanimation. */
     var level = 0f
         private set
 
     fun pluck(freq: Float, velocity: Float, tone: Tone, rnd: Random) {
         target = sr / freq
-        period = target
+        period = target / bendRatio
         t60 = tone.t60
         sBase = tone.sBase
         dampGain = 1f
@@ -111,10 +114,11 @@ internal class StringVoice(private val sr: Float) {
             return
         }
         var peak = 0f
+        val goal = target / bendRatio
         for (i in 0 until frames) {
-            if (period != target) {
-                period += (target - period) * glide
-                if (abs(target - period) < 1e-4f) period = target
+            if (period != goal) {
+                period += (goal - period) * glide
+                if (abs(goal - period) < 1e-4f) period = goal
             }
             val pf = w - (period - lossDelay) + SIZE
             val ip = floor(pf).toInt()

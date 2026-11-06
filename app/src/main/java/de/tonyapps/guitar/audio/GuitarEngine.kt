@@ -23,6 +23,12 @@ object GuitarEngine {
     @Volatile var drive = 0f
     @Volatile var chorus = 0f
     @Volatile var delay = 0f
+    @Volatile var delaySeconds = .38f
+    @Volatile var delayFeedback = .35f
+    /** Wah-Pedalstellung 0 … 1, negativ = Wah aus. */
+    @Volatile var wah = -1f
+    /** Neigungseffekt in Cent auf alle Saiten. */
+    @Volatile var whammyCents = 0f
     @Volatile var reverb = .25f
     @Volatile var volume = .8f
 
@@ -136,6 +142,9 @@ object GuitarEngine {
         private val chorusFx = Chorus(sr)
         private val echo = Echo(sr)
         private val hall = Reverb(sr)
+        private val wahFx = Wah(sr)
+        private var wahNow = 0f
+        private var bendNow = 0f
         private val mono = FloatArray(1024)
         private val outL = FloatArray(1024)
         private val outR = FloatArray(1024)
@@ -155,7 +164,15 @@ object GuitarEngine {
                 eq = toneEq(sr, t)
             }
             mono.fill(0f, 0, frames)
-            for (v in voices) v.render(mono, frames)
+            // Whammy weich nachfuehren
+            bendNow += (whammyCents - bendNow) * .35f
+            val ratio = Math.pow(2.0, bendNow / 1200.0).toFloat()
+            for (v in voices) {
+                v.bendRatio = ratio
+                v.render(mono, frames)
+            }
+            val wahTarget = wah
+            val wahOn = wahTarget >= 0f
 
             val targetDrive = min(1f, t.baseDrive + drive * (1f - t.baseDrive * .5f))
             val targetChorus = chorus * .7f
@@ -165,6 +182,10 @@ object GuitarEngine {
             for (i in 0 until frames) {
                 var x = mono[i] * .42f
                 for (b in eq) x = b.process(x)
+                if (wahOn) {
+                    wahNow += (wahTarget - wahNow) * .002f
+                    x = wahFx.process(x, wahNow)
+                }
                 driveNow += dStep
                 val d = driveNow
                 if (d > .01f) {
@@ -177,7 +198,7 @@ object GuitarEngine {
                 chorusNow += cStep
                 chorusFx.process(x, chorusNow, outL, outR, i)
             }
-            echo.process(outL, outR, frames, delay)
+            echo.process(outL, outR, frames, delay * .6f, delaySeconds, delayFeedback)
             hall.process(outL, outR, frames, reverb)
 
             val vol = volume * 1.25f

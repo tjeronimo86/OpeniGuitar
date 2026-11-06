@@ -1,24 +1,30 @@
 package de.tonyapps.guitar.audio
 
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-/** Klangcharakter je Instrument. */
+/** Instrument mit Klangcharakter und Saiten (MIDI-Noten, tiefste zuerst). */
 enum class Tone(
     val sBase: Float,     // Daempfung der Obertoene im Saitenmodell (0 hell … 0,5 dumpf)
     val t60: Float,       // Abklingzeit der tiefen Saiten in Sekunden
     val pick: Float,      // Helligkeit des Anschlags
     val pickPos: Float,   // Anschlagstelle relativ zur Saitenlaenge
     val baseDrive: Float, // eingebaute Verzerrung
+    val notes: IntArray?, // eigene Saiten; null = Gitarre mit gewaehlter Stimmung
+    val nylon: Boolean,   // Nylonsaiten (Aussehen)
 ) {
-    ACOUSTIC(.30f, 7f, .78f, .14f, 0f),
-    NYLON(.48f, 4.5f, .34f, .18f, 0f),
-    CLEAN(.16f, 10f, .62f, .11f, 0f),
-    ROCK(.18f, 13f, .68f, .10f, .55f),
+    ACOUSTIC(.30f, 7f, .78f, .14f, 0f, null, false),
+    CLEAN(.16f, 10f, .62f, .11f, 0f, null, false),
+    ROCK(.18f, 13f, .68f, .10f, .55f, null, false),
+    NYLON(.48f, 4.5f, .34f, .18f, 0f, null, true),
+    MUTED(.5f, .28f, .4f, .2f, 0f, null, false),
+    BASS(.42f, 9f, .45f, .16f, 0f, intArrayOf(28, 33, 38, 43), false),
+    UKULELE(.44f, 2.6f, .42f, .2f, 0f, intArrayOf(67, 60, 64, 69), true),
 }
 
 /** Biquad nach Robert Bristow-Johnson, Transposed Direct Form II. */
@@ -36,6 +42,13 @@ internal class Biquad {
         z1 = b1 * x - a1 * y + z2
         z2 = b2 * x - a2 * y
         return y
+    }
+
+    fun setBandpass(sr: Float, f: Double, q: Double) {
+        val w = 2 * PI * f / sr
+        val alpha = sin(w) / (2 * q)
+        val c = cos(w)
+        set(alpha, 0.0, -alpha, 1 + alpha, -2 * c, 1 - alpha)
     }
 
     private fun set(nb0: Double, nb1: Double, nb2: Double, na0: Double, na1: Double, na2: Double): Biquad {
@@ -93,6 +106,37 @@ internal fun toneEq(sr: Float, tone: Tone): Array<Biquad> = when (tone) {
         Biquad.peak(sr, 700.0, .8, 3.0),
         Biquad.lowpass(sr, 6000.0),
     )
+    Tone.MUTED -> arrayOf(
+        Biquad.highpass(sr, 80.0),
+        Biquad.peak(sr, 140.0, 1.2, 4.0),
+        Biquad.lowpass(sr, 3200.0),
+    )
+    Tone.BASS -> arrayOf(
+        Biquad.highpass(sr, 32.0),
+        Biquad.peak(sr, 80.0, 1.0, 3.0),
+        Biquad.peak(sr, 900.0, 1.0, 2.0),
+        Biquad.lowpass(sr, 3500.0),
+    )
+    Tone.UKULELE -> arrayOf(
+        Biquad.highpass(sr, 160.0),
+        Biquad.peak(sr, 380.0, 1.4, 4.0),
+        Biquad.peak(sr, 2500.0, 1.0, 2.0),
+        Biquad.lowpass(sr, 7000.0),
+    )
+}
+
+/** Wah: resonanter Bandpass, Pedalstellung 0 (zu) … 1 (offen). */
+internal class Wah(private val sr: Float) {
+    private val bp = Biquad()
+    private var last = -1f
+    fun process(x: Float, pos: Float): Float {
+        if (abs(pos - last) > .002f) {
+            last = pos
+            val f = 380.0 * Math.pow(2200.0 / 380.0, pos.toDouble())
+            bp.setBandpass(sr, f, 3.6)
+        }
+        return bp.process(x) * 2.2f
+    }
 }
 
 /** Stereo-Chorus mit zwei gegenlaeufig modulierten Verzoegerungen. */
@@ -125,31 +169,38 @@ internal class Chorus(private val sr: Float) {
     }
 }
 
-/** Stereo-Echo mit gedaempfter Rueckkopplung. */
-internal class Echo(sr: Float) {
+/** Stereo-Echo mit gedaempfter Rueckkopplung; rechts etwas spaeter fuer Breite. */
+internal class Echo(private val sr: Float) {
     private val size = 1 shl 17
     private val mask = size - 1
     private val l = FloatArray(size)
     private val r = FloatArray(size)
     private var w = 0
-    private val dl = (.32f * sr).roundToInt()
-    private val dr = (.41f * sr).roundToInt()
     private var lpL = 0f
     private var lpR = 0f
 
-    fun process(inL: FloatArray, inR: FloatArray, frames: Int, amount: Float) {
-        val fb = .28f + .4f * amount
-        val wet = .5f * amount
+    fun process(inL: FloatArray, inR: FloatArray, frames: Int, level: Float, seconds: Float, feedback: Float) {
+        if (level < .005f) {
+            // Leitung weiter fuellen, damit beim Einschalten nichts Altes kommt
+            for (i in 0 until frames) {
+                l[w] = 0f; r[w] = 0f
+                w = (w + 1) and mask
+            }
+            return
+        }
+        val dl = (seconds * sr).toInt().coerceIn(1, size - 1)
+        val dr = (seconds * 1.12f * sr).toInt().coerceIn(1, size - 1)
+        val fb = feedback.coerceIn(0f, .9f)
         for (i in 0 until frames) {
             val yl = l[(w - dl) and mask]
             val yr = r[(w - dr) and mask]
-            lpL += .35f * (yl - lpL)
-            lpR += .35f * (yr - lpR)
+            lpL += .4f * (yl - lpL)
+            lpR += .4f * (yr - lpR)
             l[w] = inL[i] + lpR * fb
             r[w] = inR[i] + lpL * fb
             w = (w + 1) and mask
-            inL[i] += wet * yl
-            inR[i] += wet * yr
+            inL[i] += level * yl
+            inR[i] += level * yr
         }
     }
 }

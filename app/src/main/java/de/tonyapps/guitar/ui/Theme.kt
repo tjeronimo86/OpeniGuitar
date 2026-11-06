@@ -58,10 +58,10 @@ fun Context.findActivity(): Activity? {
 
 /** Bildschirmausrichtung und Systemleisten fuer einen Bildschirm festlegen. */
 @Composable
-fun ScreenMode(landscape: Boolean) {
+fun ScreenMode(landscape: Boolean, immersive: Boolean = landscape) {
     val context = LocalContext.current
     val view = LocalView.current
-    DisposableEffect(landscape) {
+    DisposableEffect(landscape, immersive) {
         val activity = context.findActivity()
         activity?.requestedOrientation = if (landscape) {
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -73,7 +73,7 @@ fun ScreenMode(landscape: Boolean) {
             val controller = WindowCompat.getInsetsController(window, view)
             controller.isAppearanceLightStatusBars = false
             controller.isAppearanceLightNavigationBars = false
-            if (landscape) {
+            if (immersive) {
                 controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 controller.hide(WindowInsetsCompat.Type.systemBars())
             } else {
