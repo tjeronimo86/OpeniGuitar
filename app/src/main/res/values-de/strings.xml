@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="done">Fertig</string>
+    <string name="whats_new">Was ist neu</string>
+
+    <string name="tab_guitar">Gitarre</string>
+    <string name="tab_tuner">Stimmen</string>
+    <string name="tab_options">Optionen</string>
+    <string name="tab_effects">Effekte</string>
+    <string name="tab_scroll">Scrollen</string>
+    <string name="fret_n">Bund %1$d</string>
+
+    <string name="sound">Klang</string>
+    <string name="tone_acoustic">Akustik</string>
+    <string name="tone_nylon">Nylon</string>
+    <string name="tone_clean">Clean</string>
+    <string name="tone_rock">Rock</string>
+    <string name="fx_drive">Verzerrung</string>
+    <string name="fx_chorus">Chorus</string>
+    <string name="fx_delay">Echo</string>
+    <string name="fx_reverb">Hall</string>
+    <string name="fx_volume">Lautstärke</string>
+
+    <string name="auto">Autom.</string>
+    <string name="guitar_6">Gitarre 6-saitig</string>
+    <string name="chromatic">Chromatisch</string>
+    <string name="chromatic_hint">Zeigt jeden Ton, nicht nur die Gitarrensaiten</string>
+    <string name="hint_play">Spiel eine Saite an</string>
+    <string name="hint_play_string">Spiel die gewählte Saite an</string>
+    <string name="hint_in_tune">Gestimmt</string>
+    <string name="hint_up">Höher stimmen</string>
+    <string name="hint_down">Tiefer stimmen</string>
+    <string name="mic_needed">Das Stimmgerät hört über das Mikrofon zu. Es wird nichts aufgenommen oder verschickt.</string>
+    <string name="mic_allow">Mikrofon erlauben</string>
+
+    <string name="tuning">Stimmung</string>
+    <string name="t_standard">Standard</string>
+    <string name="t_drop_d">Drop D</string>
+    <string name="t_half_down">Halbton tiefer</string>
+    <string name="t_full_down">Ganzton tiefer</string>
+    <string name="t_drop_c">Drop C</string>
+    <string name="t_dadgad">DADGAD</string>
+    <string name="t_open_g">Open G</string>
+    <string name="t_open_d">Open D</string>
+    <string name="t_open_e">Open E</string>
+
+    <string name="sec_guitar">Gitarre</string>
+    <string name="sec_tuner">Stimmgerät</string>
+    <string name="sec_app">App</string>
+    <string name="frets_visible">Sichtbare Bünde</string>
+    <string name="opt_lefty">Linkshänder</string>
+    <string name="opt_notes">Notennamen anzeigen</string>
+    <string name="opt_tap">Antippen spielt den Ton</string>
+    <string name="opt_tap_hint">Aus: Bünde greifen und auf dem Korpus anschlagen wie beim Original</string>
+    <string name="opt_mute">Finger loslassen dämpft die Saite</string>
+    <string name="opt_haptics">Vibration</string>
+    <string name="a4">Kammerton A4</string>
+    <string name="about">OpeniGuitar ist ein privates Hobbyprojekt, nicht kommerziell. Der Klang wird in Echtzeit berechnet; das Stimmgerät wertet das Mikrofon nur auf dem Gerät aus.</string>
+
+    <string name="u_version">Version %1$s (Build %2$d)</string>
+    <string name="u_tap_search">Tippe zum Suchen nach Updates</string>
+    <string name="u_searching">Suche nach Updates …</string>
+    <string name="u_current">Aktuell</string>
+    <string name="u_available_named">Update verfügbar: %1$s</string>
+    <string name="u_available">Update verfügbar</string>
+    <string name="u_download">Herunterladen</string>
+    <string name="u_later">Später</string>
+    <string name="u_err_404">Keine Version gefunden.</string>
+    <string name="u_err_403">GitHub lässt gerade keine Abfrage zu. Versuche es später.</string>
+    <string name="u_err_net">Keine Verbindung zu GitHub.</string>
+</resources>

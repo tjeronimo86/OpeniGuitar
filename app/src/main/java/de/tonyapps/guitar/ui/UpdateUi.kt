@@ -1,0 +1,159 @@
+package de.tonyapps.guitar.ui
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.*
+import de.tonyapps.guitar.R
+import de.tonyapps.guitar.data.Changelog
+import de.tonyapps.guitar.data.tr
+import de.tonyapps.guitar.update.AppRelease
+import de.tonyapps.guitar.update.UpdateState
+import de.tonyapps.guitar.update.Updater
+
+private val Blue = Color(0xFF0A84FF)
+private val Panel = Color(0xFF1C1C1E)
+
+/** App-Version mit Update-Knopf, in den Optionen. */
+@Composable
+fun VersionRow() {
+    val context = LocalContext.current
+    val state = Updater.state
+    val status = when (state) {
+        UpdateState.Idle -> tr(R.string.u_tap_search)
+        UpdateState.Checking -> tr(R.string.u_searching)
+        UpdateState.UpToDate -> tr(R.string.u_current)
+        is UpdateState.Available -> tr(R.string.u_available_named, state.release.title)
+        is UpdateState.Failed -> state.message
+    }
+    val highlight = state is UpdateState.Available
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Panel)
+            .clickable {
+                when (state) {
+                    is UpdateState.Available -> Updater.sheetHidden = false
+                    else -> Updater.check(context)
+                }
+            }
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(Changelog.versionLabel(context), fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            Text(
+                status,
+                fontSize = 13.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                color = if (highlight) Blue else Color.White.copy(alpha = .6f),
+            )
+        }
+        Spacer(Modifier.width(10.dp))
+        val spin by rememberInfiniteTransition(label = "update").animateFloat(
+            0f, 360f, infiniteRepeatable(tween(900, easing = LinearEasing)), label = "spin",
+        )
+        val busy = state is UpdateState.Checking
+        RefreshGlyph(
+            Color.White.copy(alpha = .85f),
+            Modifier.size(24.dp).graphicsLayer { rotationZ = if (busy) spin else 0f },
+        )
+    }
+}
+
+/** Hinweis auf ein Update mit Fortschritt; liegt ueber allem anderen. */
+@Composable
+fun UpdateSheet() {
+    val state = Updater.state
+    val release: AppRelease? = (state as? UpdateState.Available)?.release
+    val shown = release != null && !Updater.sheetHidden
+    // Beim Ausblenden bleibt der Inhalt noch stehen
+    var last by remember { mutableStateOf(release) }
+    if (release != null) last = release
+
+    Box(Modifier.fillMaxSize()) {
+        AnimatedVisibility(visible = shown, enter = fadeIn(), exit = fadeOut()) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = .5f))
+                    .pointerInput(Unit) { detectTapGestures { } },
+            )
+        }
+        AnimatedVisibility(
+            visible = shown,
+            modifier = Modifier.align(Alignment.BottomCenter),
+            enter = slideInVertically(spring(dampingRatio = .9f, stiffness = 320f)) { it } + fadeIn(),
+            exit = slideOutVertically(tween(240)) { it } + fadeOut(),
+        ) {
+            last?.let { SheetContent(it) }
+        }
+    }
+}
+
+@Composable
+private fun SheetContent(release: AppRelease) {
+    val context = LocalContext.current
+    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
+            .background(Panel)
+            .pointerInput(Unit) { detectTapGestures { } }
+            .padding(start = 18.dp, end = 18.dp, top = 18.dp, bottom = bottom + 16.dp),
+    ) {
+        Text(tr(R.string.u_available), fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+        Text(release.title, fontSize = 14.sp, color = Color.White.copy(alpha = .65f))
+        Spacer(Modifier.height(10.dp))
+        release.notes.take(6).forEach { note ->
+            Row(Modifier.padding(vertical = 2.dp)) {
+                Text("•", fontSize = 14.sp, color = Color.White.copy(alpha = .6f))
+                Spacer(Modifier.width(8.dp))
+                Text(note, fontSize = 14.sp, lineHeight = 19.sp, color = Color.White.copy(alpha = .85f))
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SheetButton(tr(R.string.u_later), Color(0xFF2C2C2E), Modifier.weight(1f)) { Updater.sheetHidden = true }
+            SheetButton(tr(R.string.u_download), Blue, Modifier.weight(1f)) { Updater.download(context, release) }
+        }
+    }
+}
+
+@Composable
+private fun SheetButton(label: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
+    Text(
+        label,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.SemiBold,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(color)
+            .clickable(onClick = onClick)
+            .padding(vertical = 13.dp),
+    )
+}

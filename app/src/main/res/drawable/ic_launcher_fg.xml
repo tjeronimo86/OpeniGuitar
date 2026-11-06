@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Plektrum -->
+    <path android:pathData="M54,81 C46,73 33,53 33,43 C33,33 44,30 54,30 C64,30 75,33 75,43 C75,53 62,73 54,81 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="36"
+                android:startY="30"
+                android:endX="70"
+                android:endY="80">
+                <item android:offset="0" android:color="#FFFFFBF2" />
+                <item android:offset="1" android:color="#FFD9CDB8" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Stimmanzeige -->
+    <path android:pathData="M54,38 L54,56" android:strokeColor="#FF34C77B" android:strokeWidth="3" android:strokeLineCap="round" />
+    <path android:pathData="M54,64 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" android:fillColor="#FF34C77B" />
+</vector>

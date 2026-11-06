@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">OpeniGuitar</string>
+    <string name="done">Done</string>
+    <string name="whats_new">What\'s New</string>
+
+    <string name="tab_guitar">Guitar</string>
+    <string name="tab_tuner">Tuner</string>
+    <string name="tab_options">Options</string>
+    <string name="tab_effects">Effects</string>
+    <string name="tab_scroll">Scroll</string>
+    <string name="fret_n">Fret %1$d</string>
+
+    <string name="sound">Sound</string>
+    <string name="tone_acoustic">Acoustic</string>
+    <string name="tone_nylon">Nylon</string>
+    <string name="tone_clean">Clean</string>
+    <string name="tone_rock">Rock</string>
+    <string name="fx_drive">Distortion</string>
+    <string name="fx_chorus">Chorus</string>
+    <string name="fx_delay">Delay</string>
+    <string name="fx_reverb">Reverb</string>
+    <string name="fx_volume">Volume</string>
+
+    <string name="auto">Auto</string>
+    <string name="guitar_6">6-string guitar</string>
+    <string name="chromatic">Chromatic</string>
+    <string name="chromatic_hint">Shows every note, not just the guitar strings</string>
+    <string name="hint_play">Play a string</string>
+    <string name="hint_play_string">Play the selected string</string>
+    <string name="hint_in_tune">In tune</string>
+    <string name="hint_up">Tune up</string>
+    <string name="hint_down">Tune down</string>
+    <string name="mic_needed">The tuner listens through the microphone. Nothing is recorded or sent anywhere.</string>
+    <string name="mic_allow">Allow microphone</string>
+
+    <string name="tuning">Tuning</string>
+    <string name="t_standard">Standard</string>
+    <string name="t_drop_d">Drop D</string>
+    <string name="t_half_down">Half step down</string>
+    <string name="t_full_down">Whole step down</string>
+    <string name="t_drop_c">Drop C</string>
+    <string name="t_dadgad">DADGAD</string>
+    <string name="t_open_g">Open G</string>
+    <string name="t_open_d">Open D</string>
+    <string name="t_open_e">Open E</string>
+
+    <string name="sec_guitar">Guitar</string>
+    <string name="sec_tuner">Tuner</string>
+    <string name="sec_app">App</string>
+    <string name="frets_visible">Visible frets</string>
+    <string name="opt_lefty">Left-handed</string>
+    <string name="opt_notes">Show note names</string>
+    <string name="opt_tap">Tapping a fret plays the note</string>
+    <string name="opt_tap_hint">Off: hold frets and strum on the body like on the original</string>
+    <string name="opt_mute">Lifting a finger mutes the string</string>
+    <string name="opt_haptics">Vibration</string>
+    <string name="a4">Concert pitch A4</string>
+    <string name="about">OpeniGuitar is a private hobby project, not commercial. The sound is synthesized in real time; the tuner analyses the microphone only on the device.</string>
+
+    <string name="u_version">Version %1$s (Build %2$d)</string>
+    <string name="u_tap_search">Tap to check for updates</string>
+    <string name="u_searching">Checking for updates …</string>
+    <string name="u_current">Up to date</string>
+    <string name="u_available_named">Update available: %1$s</string>
+    <string name="u_available">Update available</string>
+    <string name="u_download">Download</string>
+    <string name="u_later">Later</string>
+    <string name="u_err_404">No version found.</string>
+    <string name="u_err_403">GitHub is not accepting requests right now. Try again later.</string>
+    <string name="u_err_net">Can\'t reach GitHub.</string>
+</resources>
